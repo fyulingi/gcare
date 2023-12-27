@@ -47,7 +47,7 @@ int main(int argc, char** argv) {
         ("output,o", po::value<std::string>(), "output directory in query mode")
         ("data,d", po::value<std::string>(), "binary datafile")
         ("ratio,p", po::value<string>()->default_value("0.03"), "sampling ratio")
-        ("iteration,n", po::value<int>()->default_value(30), "iterations per query")
+        ("iteration,n", po::value<int>()->default_value(3), "iterations per query")  // change the default num from 30 to 3 for acceleration
         ("seed,s", po::value<int>()->default_value(0), "random seed");
     po::variables_map vm;
     po::store(po::command_line_parser(argc, argv).options(desc).run(), vm);
@@ -150,7 +150,9 @@ int main(int argc, char** argv) {
     int shmid = shmget(key,sizeof(QueryResult),0666|IPC_CREAT);
     QueryResult *query_result = (QueryResult*) shmat(shmid,(void*)0,0); 
     for (auto& dir_entry : fs::recursive_directory_iterator(input_str.c_str())) {
-      if (dir_entry.path().string().find_last_of(".txt") + 1 != dir_entry.path().string().length()) continue;
+      if (dir_entry.path().string().find_last_of(".txt") + 1 != dir_entry.path().string().length() &&
+              dir_entry.path().string().find_last_of(".graph") + 1 != dir_entry.path().string().length()) continue;
+//      if (dir_entry.path().string().find("query_dense_4_97") == string::npos ) continue;
       std::cout << "Estimator for " << dir_entry.path().string() << "\n";
       try {
         QueryGraph q;
@@ -189,7 +191,7 @@ int main(int argc, char** argv) {
                 //throw Estimator::ErrCode::UNKNOWN;
               }
               double elapsed_milliseconds = (double) (Clock::now() - chkpt).count() / 1000000;
-              if (elapsed_milliseconds > 5 * 60 * 1000.0) {
+              if (elapsed_milliseconds > 0.5 * 60 * 1000.0) {
                 kill(child_pid,SIGKILL);
                 std::cout << "timeout\n";
                 do {

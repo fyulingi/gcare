@@ -15,32 +15,69 @@ void QueryGraph::ReadText(const char* fn) {
 	ifstream input(fn);
 	string line;
 	int max_vl = -1, max_el = -1;
-    while (getline(input, line)) {
-        auto tok = parse(line, " ");
-        if (tok[0][0] == 'v') {
-			int vl = stoi(tok[2]);
-			max_vl = std::max(max_vl, vl);
-			vl_.push_back(vl);
-			int bound = stoi(tok[3]);
-			bound_.push_back(bound);
-			vnum_++;
+
+    bool survery_format = true;  // true: format for this paper; false: format for In-memory survey data
+    getline(input, line);
+    if (line.find('#') != line.npos) survery_format = false;
+//    int tok_size_off = edge_labeled_graph ? 0 : 1;
+
+    if (survery_format) {
+        while (getline(input, line)) {
+            auto tok = parse(line, " ");
+            if (tok[0][0] == 'v') {
+                int vl = stoi(tok[2]);
+                max_vl = std::max(max_vl, vl);
+                vl_.push_back(vl);
+                int bound = -1;
+                bound_.push_back(bound);
+                vnum_++;
+            }
+            if (tok[0][0] == 'e') {
+                if (adj_.size() == 0)
+                    adj_.resize(vnum_);
+                if (in_adj_.size() == 0)
+                    in_adj_.resize(vnum_);
+                int src = stoi(tok[1]);
+                int dst = stoi(tok[2]);
+                int el  = 0;
+                assert(src < vnum_);
+                assert(dst < vnum_);
+                max_el = std::max(max_el, el);
+                edge_.emplace_back(src, dst, el);
+                adj_[src].push_back(make_pair(dst, el));
+                in_adj_[dst].push_back(make_pair(src, el));
+                //cout << "Q add edge (" << src << ", " << dst << ", " << el << ")" << endl;
+                enum_++;
+            }
         }
-        if (tok[0][0] == 'e') {
-            if (adj_.size() == 0)
-                adj_.resize(vnum_);
-            if (in_adj_.size() == 0)
-                in_adj_.resize(vnum_);
-            int src = stoi(tok[1]);
-            int dst = stoi(tok[2]);
-            int el  = stoi(tok[3]);
-            assert(src < vnum_);
-            assert(dst < vnum_);
-            max_el = std::max(max_el, el);
-            edge_.emplace_back(src, dst, el);
-            adj_[src].push_back(make_pair(dst, el));
-            in_adj_[dst].push_back(make_pair(src, el));
-            //cout << "Q add edge (" << src << ", " << dst << ", " << el << ")" << endl;
-            enum_++;
+    } else {
+        while (getline(input, line)) {
+            auto tok = parse(line, " ");
+            if (tok[0][0] == 'v') {
+                int vl = stoi(tok[2]);
+                max_vl = std::max(max_vl, vl);
+                vl_.push_back(vl);
+                int bound = stoi(tok[3]);
+                bound_.push_back(bound);
+                vnum_++;
+            }
+            if (tok[0][0] == 'e') {
+                if (adj_.size() == 0)
+                    adj_.resize(vnum_);
+                if (in_adj_.size() == 0)
+                    in_adj_.resize(vnum_);
+                int src = stoi(tok[1]);
+                int dst = stoi(tok[2]);
+                int el = stoi(tok[3]);
+                assert(src < vnum_);
+                assert(dst < vnum_);
+                max_el = std::max(max_el, el);
+                edge_.emplace_back(src, dst, el);
+                adj_[src].push_back(make_pair(dst, el));
+                in_adj_[dst].push_back(make_pair(src, el));
+                //cout << "Q add edge (" << src << ", " << dst << ", " << el << ")" << endl;
+                enum_++;
+            }
         }
     }
     if (adj_.size() == 0)

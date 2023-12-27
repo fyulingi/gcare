@@ -1,0 +1,11 @@
+
+
+./gcare_graph -b -m wj -i ../data/survery_data/hprd/data_graph/hprd.graph -d ../data/survery_data/hprd/data_graph/hprd -o ../data/survery_data/hprd/data_graph/wj_build_result.txt
+./gcare_graph -q -m wj -i ../data/survery_data/hprd/query_graph -d ../data/survery_data/hprd/data_graph/hprd -o ../data/survery_data/hprd/data_graph/wj_query_result.txt
+
+./gcare_graph -b -m wj -i ../data/survery_data/yeast/data_graph/yeast.graph -d ../data/survery_data/yeast/data_graph/yeast -o ../data/survery_data/yeast/data_graph/wj_build_result.txt
+./gcare_graph -q -m wj -i ../data/survery_data/yeast/query_graph -d ../data/survery_data/yeast/data_graph/yeast -o ../data/survery_data/yeast/data_graph/wj_query_result.txt
+
+
+./gcare_graph -b -m wj -i ../data/survery_data/test/data_graph/test.graph -d ../data/survery_data/test/data_graph/test -o ../data/survery_data/test/data_graph/wj_build_result.txt
+./gcare_graph -q -m wj -i ../data/survery_data/test/query_graph -d ../data/survery_data/test/data_graph/test -o ../data/survery_data/test/data_graph/wj_query_result.txt

@@ -17,33 +17,66 @@ void DataGraph::ReadText(const char* fn) {
 	raw_.max_vl_ = raw_.max_el_ = -1;
 	ifstream input(fn);
 	string line;
-
     uint64_t num = 0;
-	while (getline(input, line)) {
-		auto tok = parse(line, " ");
-		if (tok[0][0] == 'v') {
-			vector<int> labels;
-			for (int i = 2; i < tok.size(); i++) {
-				int vl = stoi(tok[i]);
-        if (vl < 0) continue;
-				labels.push_back(vl);
-				raw_.max_vl_ = std::max(raw_.max_vl_, vl);
-			}
-			raw_.vlabels_.push_back(labels);
-		}
-		if (tok[0][0] == 'e') {
-			int src = stoi(tok[1]);
-			int dst = stoi(tok[2]);
-			for (int i = 3; i < tok.size(); i++) {
-				int el = stoi(tok[i]);
-				raw_.out_edges_.emplace_back(src, dst, el);
-				raw_.in_edges_.emplace_back(dst, src, el);
-				raw_.max_el_ = std::max(raw_.max_el_, el);
-			}
-		}
-        ++num;
-        if (num % 10000000 == 0) std::cout << "Parse " << num << " lines...\n";
-	}
+
+    bool survey_format = true;  // true: format for this paper; false: format for In-memory survey data
+    getline(input, line);
+    if (line.find('#') != line.npos) survey_format = false;
+
+    if (survey_format) {
+        while (getline(input, line)) {
+            auto tok = parse(line, " ");
+            if (tok[0][0] == 'v') {
+                vector<int> labels;
+                for (int i = 2; i < tok.size()-1; i++) {
+                    int vl = stoi(tok[i]);
+                    if (vl < 0) continue;
+                    labels.push_back(vl);
+                    raw_.max_vl_ = std::max(raw_.max_vl_, vl);
+                }
+                raw_.vlabels_.push_back(labels);
+            }
+            if (tok[0][0] == 'e') {
+                int src = stoi(tok[1]);
+                int dst = stoi(tok[2]);
+                int el = 0;  // For edge-not-labeled graph, assign label 0 for every edge
+                // survey is for unlabeled graph
+                raw_.out_edges_.emplace_back(src, dst, el);
+                raw_.in_edges_.emplace_back(dst, src, el);
+                raw_.in_edges_.emplace_back(src, dst, el);
+                raw_.out_edges_.emplace_back(dst, src, el);
+                raw_.max_el_ = std::max(raw_.max_el_, el);
+            }
+            ++num;
+            if (num % 10000000 == 0) std::cout << "Parse " << num << " lines...\n";
+        }
+    } else {
+        while (getline(input, line)) {
+            auto tok = parse(line, " ");
+            if (tok[0][0] == 'v') {
+                vector<int> labels;
+                for (int i = 2; i < tok.size(); i++) {
+                    int vl = stoi(tok[i]);
+                    if (vl < 0) continue;
+                    labels.push_back(vl);
+                    raw_.max_vl_ = std::max(raw_.max_vl_, vl);
+                }
+                raw_.vlabels_.push_back(labels);
+            }
+            if (tok[0][0] == 'e') {
+                int src = stoi(tok[1]);
+                int dst = stoi(tok[2]);
+                for (int i = 3; i < tok.size(); i++) {
+                    int el = stoi(tok[i]);
+                    raw_.out_edges_.emplace_back(src, dst, el);
+                    raw_.in_edges_.emplace_back(dst, src, el);
+                    raw_.max_el_ = std::max(raw_.max_el_, el);
+                }
+            }
+            ++num;
+            if (num % 10000000 == 0) std::cout << "Parse " << num << " lines...\n";
+        }
+    }
 	raw_.el_cnt_.resize(raw_.max_el_ + 1);
 	raw_.vl_cnt_.resize(raw_.max_vl_ + 1);
 	raw_.el_rel_.resize(raw_.max_el_ + 1);
@@ -186,12 +219,12 @@ size_t DataGraph::BinarySize() {
 }
 
 bool DataGraph::HasBinary(const char* filename) {
-  string metadata = string(filename) + ".graph.meta";
+  string metadata = string(filename) + ".bgraph.meta";
 	return std::experimental::filesystem::exists(metadata.c_str());
 }
 
 void DataGraph::WriteBinary(const char* filename) {
-  string fname = string(filename) + ".graph";
+  string fname = string(filename) + ".bgraph";
   std::cout << "DataGraph::WriteBinary" << fname << "\n";
 	string metadata = fname + ".meta";
 	FILE* fp = fopen(metadata.c_str(), "w");
@@ -325,7 +358,7 @@ void DataGraph::WriteBinary(const char* filename) {
 }
 
 void DataGraph::ReadBinary(const char* filename) {
-  string fname = string(filename) + ".graph";
+  string fname = string(filename) + ".bgraph";
     std::cout << "DataGraph::ReadBinary" << fname << "\n";
 	string metadata = fname + ".meta";
 	FILE* fp = fopen(metadata.c_str(), "r");
